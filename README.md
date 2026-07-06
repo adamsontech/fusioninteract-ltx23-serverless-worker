@@ -6,7 +6,13 @@ image-to-video jobs.
 It is based on `runpod/worker-comfyui:5.8.6-base`, so it keeps the RunPod
 serverless `/run`, `/runsync`, `/status`, and `/health` handler behavior.
 
-The image bakes in the LTX 2.3 model files required by
+The image does not bake in the LTX 2.3 model files. RunPod GitHub builds have a
+30 minute limit, and exporting an image with the full model set can exceed it.
+Instead, `scripts/fusioninteract-start.sh` provisions the models at worker
+startup, preferably on the attached RunPod Serverless network volume mounted at
+`/runpod-volume`.
+
+The startup script downloads and links these files required by
 `www/account/workflows/video_ltx2_3_i2v.json`:
 
 - `models/checkpoints/ltx-2.3-22b-dev.safetensors`
@@ -26,6 +32,11 @@ docker push your-registry/fusioninteract-ltx23-serverless:latest
 ```
 
 Then update the RunPod endpoint Docker image to that pushed image.
+
+Attach a RunPod network volume to the endpoint before running production jobs.
+Serverless network volumes mount at `/runpod-volume`; the first worker startup
+will populate `/runpod-volume/comfyui/models`, and later cold starts should reuse
+the same files.
 
 Keep the endpoint API key in RunPod/FusionInteract private config only. Do not
 add keys to this Docker context.
