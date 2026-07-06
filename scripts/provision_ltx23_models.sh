@@ -7,8 +7,12 @@ VOLUME_DIR="${RUNPOD_VOLUME_PATH:-/runpod-volume}"
 if [ -d "$VOLUME_DIR" ] && [ -w "$VOLUME_DIR" ]; then
   MODEL_ROOT="${FUSION_LTX_MODEL_ROOT:-$VOLUME_DIR/comfyui/models}"
 else
-  MODEL_ROOT="${FUSION_LTX_MODEL_ROOT:-$COMFYUI_DIR/models}"
+  echo "FusionInteract LTX models require a writable RunPod network volume at $VOLUME_DIR." >&2
+  echo "Attach the FusionInteract network volume before starting this worker." >&2
+  exit 12
 fi
+
+echo "FusionInteract LTX model root: $MODEL_ROOT"
 
 mkdir -p \
   "$MODEL_ROOT/checkpoints" \
@@ -23,14 +27,24 @@ mkdir -p \
 download_file() {
   local target="$1"
   local url="$2"
+  local filename
   local tmp="${target}.part"
+  filename="$(basename "$target")"
 
   if [ -s "$target" ]; then
     echo "Model ready: $target"
     return 0
   fi
 
-  echo "Downloading model: $(basename "$target")"
+  local existing=""
+  existing="$(find "$VOLUME_DIR" -type f -name "$filename" -size +1M 2>/dev/null | head -n 1 || true)"
+  if [ -n "$existing" ]; then
+    echo "Reusing model from volume: $existing"
+    ln -s "$existing" "$target"
+    return 0
+  fi
+
+  echo "Downloading model: $filename"
   rm -f "$tmp"
   if command -v wget >/dev/null 2>&1; then
     wget -q -O "$tmp" "$url"
