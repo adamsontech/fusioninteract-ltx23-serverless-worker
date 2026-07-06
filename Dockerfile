@@ -1,4 +1,4 @@
-ARG WORKER_COMFYUI_IMAGE=runpod/worker-comfyui:5.8.6-base
+ARG WORKER_COMFYUI_IMAGE=runpod/worker-comfyui:fix-dr-1170-ngc-base-blackwell-base-cuda12.8.1
 FROM ${WORKER_COMFYUI_IMAGE}
 
 ENV DEBIAN_FRONTEND=noninteractive
