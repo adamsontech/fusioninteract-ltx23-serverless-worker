@@ -8,6 +8,7 @@ WORKDIR /comfyui
 
 # Keep the Docker build small. RunPod GitHub builds have a 30 minute limit,
 # and exporting an image with the full LTX 2.3 model set exceeds it.
+COPY handler.py /handler.py
 COPY handler.py /rp_handler.py
 COPY scripts/provision_ltx23_models.sh /usr/local/bin/provision_ltx23_models.sh
 COPY scripts/fusioninteract-start.sh /usr/local/bin/fusioninteract-start.sh
